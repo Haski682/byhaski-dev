@@ -103,13 +103,31 @@ onBeforeUnmount(() => {
   will-change: transform;
 }
 
-/* La imagen va en 16:10, igual que las capturas, para que no se recorte a los lados.
-   Si el texto de al lado es más alto, la tarjeta crece y la imagen se estira con ella. */
+/* La imagen ocupa siempre el ancho de su columna. El ::before le da al menos el alto de
+   16:10, igual que las capturas, para que no se recorte a los lados. Si el texto de al
+   lado es más alto, la tarjeta crece y la imagen llena ese alto sin salirse de la columna.
+   (No se usa aspect-ratio aquí: con la tarjeta más alta, el navegador ensanchaba la imagen
+   encima del texto.) */
 .stack__visual {
+  position: relative;
+  min-width: 0;
   min-height: 0;
-  aspect-ratio: 16 / 10;
-  align-self: stretch;
   border-right: 1px solid var(--line);
+}
+.stack__visual::before {
+  content: '';
+  display: block;
+  padding-top: 62.5%;
+}
+.stack__visual > * {
+  position: absolute;
+  inset: 0;
+}
+/* La captura se ve completa: si la tarjeta queda más alta que 16:10, sobra fondo abajo
+   en vez de cortarle los lados (ahí suelen estar el título y el logo del sitio). */
+.stack__visual :deep(img) {
+  object-fit: contain;
+  object-position: center top;
 }
 
 .stack__info {
@@ -117,10 +135,9 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   justify-content: end;
-  gap: 18px;
-  padding: clamp(24px, 3vw, 48px);
+  gap: 14px;
+  padding: clamp(20px, 2.4vw, 40px);
   min-height: 0;
-  overflow: auto;
 }
 
 .stack__client {
@@ -145,7 +162,6 @@ onBeforeUnmount(() => {
 .stack__summary {
   color: var(--ink-2);
   max-width: 46ch;
-  margin-bottom: 8px;
 }
 
 .stack__details {
@@ -173,7 +189,26 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-@media (max-width: 900px) {
+/* En pantallas medianas el texto se compacta para no quedar más alto que la imagen:
+   título un paso más chico y resumen en 3 líneas (completo en "Ver detalles"). */
+@media (max-width: 1440px) {
+  .stack__title {
+    font-size: var(--step-3);
+  }
+  .stack__summary {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+  }
+  .stack__info :deep(.meta__visit) {
+    margin-top: 12px;
+  }
+}
+
+/* Más angosto: imagen arriba y texto abajo, como en el celular. */
+@media (max-width: 1279px) {
   .stack {
     display: grid;
     gap: 56px;
@@ -188,7 +223,6 @@ onBeforeUnmount(() => {
     transform: none;
   }
   .stack__visual {
-    aspect-ratio: 16 / 10;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
